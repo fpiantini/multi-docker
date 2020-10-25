@@ -1,0 +1,25 @@
+language: generic
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t fpiantini/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run -e CI=true fpiantini/react-test npm run test 
+
+after_success:
+    - docker build -t fpiantini/multicontainer-client ./client
+    - docker build -t fpiantini/multicontainer-nginx ./nginx
+    - docker build -t fpiantini/multicontainer-server ./server
+    - docker build -t fpiantini/multicontainer-worker ./worker
+    # Log in to the docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID"  --password-stdin
+
+    # take those images and push them on docker hub
+    - docker push fpiantini/multicontainer-client
+    - docker push fpiantini/multicontainer-nginx
+    - docker push fpiantini/multicontainer-server
+    - docker push fpiantini/multicontainer-worker
+    
